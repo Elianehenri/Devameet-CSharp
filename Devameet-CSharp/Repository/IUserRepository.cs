@@ -7,5 +7,6 @@ namespace Devameet_CSharp.Repository
     {
         bool VerifyEmail(string email);
         void Save(User user);
+        User GetUserByLoginPassword(string login, string password);
     }
 }
