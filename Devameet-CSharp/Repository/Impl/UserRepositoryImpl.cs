@@ -10,6 +10,12 @@ namespace Devameet_CSharp.Repository.Impl
         {
             _context = context;
         }
+        public User GetUserById(int iduser)
+        {
+            return _context.Users.FirstOrDefault(u => u.Id == iduser);
+        }
+
+
 
         public User GetUserByLoginPassword(string login, string password)
         {
@@ -19,6 +25,12 @@ namespace Devameet_CSharp.Repository.Impl
         public void Save(User user)
         {
             _context.Add(user);
+            _context.SaveChanges();
+        }
+
+        public void UpdateUser(User user)
+        {
+            _context.Update(user);
             _context.SaveChanges();
         }
 

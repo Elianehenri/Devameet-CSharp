@@ -1,5 +1,7 @@
 using Devameet_CSharp;
 using Devameet_CSharp.Models;
+using Devameet_CSharp.Repository;
+using Devameet_CSharp.Repository.Impl;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -14,10 +16,16 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
 //conectar banco de dados
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<DevameetContext>(options => options.UseSqlServer(connectionString));
 
+//configurar injeçao de dependencia
+builder.Services.AddScoped<IUserRepository, UserRepositoryImpl>();
+
+
+//configurar jwt
 //na hora de inicializar a aplicaçao, ela esta pegando a configurçao do jwt la no appsettings.json e colocando na classe JWTKey
 var jwtsettings = builder.Configuration.GetRequiredSection("JWT").Get<JWTKey>();
 //acessando a chave de segurança
@@ -50,6 +58,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
