@@ -23,6 +23,8 @@ builder.Services.AddDbContext<DevameetContext>(options => options.UseSqlServer(c
 
 //configurar injeçao de dependencia
 builder.Services.AddScoped<IUserRepository, UserRepositoryImpl>();
+builder.Services.AddScoped<IMeetRepository, MeetRepositoryImpl>();
+builder.Services.AddScoped<IMeetObjectRepository, MeetObjectRepositoryImpl>();
 
 
 //configurar jwt
