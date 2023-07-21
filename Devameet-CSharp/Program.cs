@@ -25,6 +25,7 @@ builder.Services.AddDbContext<DevameetContext>(options => options.UseSqlServer(c
 builder.Services.AddScoped<IUserRepository, UserRepositoryImpl>();
 builder.Services.AddScoped<IMeetRepository, MeetRepositoryImpl>();
 builder.Services.AddScoped<IMeetObjectRepository, MeetObjectRepositoryImpl>();
+builder.Services.AddScoped<IRoomRepository, RoomRepositoryImpl>();
 
 
 //configurar jwt
