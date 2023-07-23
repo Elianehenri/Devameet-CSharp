@@ -22,6 +22,7 @@ namespace Devameet_CSharp.Controllers
         }
 
         [HttpGet]
+     
         public IActionResult GetMeet()
         {
             try
@@ -45,8 +46,36 @@ namespace Devameet_CSharp.Controllers
             }
             
         }
+        [HttpGet]
+        [Route("objects")]
+        public IActionResult GetMeetObjects(int meetid)
+        {
+            try
+            {
+                //lista da sala de reunioes do user
+                User user = GetToken();
+
+                //List<MeetObjects> meets = _meetObjectRepository.GetMeetObjectsByMeet(meetid);
+
+                
+
+                return Ok(_meetObjectRepository.GetMeetObjectsById(meetid));
+
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Ocorreu um erro ao obter  os objetos da sala de reunião");
+                return StatusCode(StatusCodes.Status500InternalServerError, new ErrorResponseDto()
+                {
+                    Description = "Ocorreu um erro ao obter  os objetos da sala de reunião: " + e.Message,
+                    Status = StatusCodes.Status500InternalServerError
+                });
+            }
+
+        }
 
         [HttpPost]
+    
         public IActionResult CreateMeet([FromBody] MeetRequestDto meetRequestDto)
         {
             try
@@ -54,7 +83,7 @@ namespace Devameet_CSharp.Controllers
                 if (String.IsNullOrEmpty(meetRequestDto.Name) || String.IsNullOrWhiteSpace(meetRequestDto.Name))
                 {
                     _logger.LogError("O nome da sala de reunião precisa ser preenchido");
-                    return StatusCode(StatusCodes.Status400BadRequest , new ErrorResponseDto()
+                    return StatusCode(StatusCodes.Status400BadRequest, new ErrorResponseDto()
                     {
                         Description = "O nome da sala de reunião precisa ser preenchido",
                         Status = StatusCodes.Status400BadRequest
@@ -69,9 +98,11 @@ namespace Devameet_CSharp.Controllers
                     meet.Link = Guid.NewGuid().ToString();
 
                     _meetRepository.CreateMeet(meet);
+
                     return Ok("Sala de reunião salva com sucesso");
                 }
-               
+
+
             }
             catch (Exception e)
             {
@@ -83,7 +114,9 @@ namespace Devameet_CSharp.Controllers
                 });
             }
         }
+
         [HttpPut]
+      
         public IActionResult UpdateMeet([FromBody] MeetUpdateRequestDto meetUpdateRequestDto, int meetId)
 
         {
@@ -95,7 +128,7 @@ namespace Devameet_CSharp.Controllers
                 _meetRepository.UpdateMeet(meet);
                 List<MeetObjects> meetObjects = new List<MeetObjects>();
                 //percorrer a lista de objetos da sala de reuniao
-                foreach (MeetObjectDto objectsDto in meetUpdateRequestDto.MeetObjects)
+                foreach (MeetObjectDto objectsDto in meetUpdateRequestDto.Objects)
                 {
                     MeetObjects meetObj = new MeetObjects();
                     meetObj.Name = objectsDto.Name;
@@ -104,6 +137,7 @@ namespace Devameet_CSharp.Controllers
                     meetObj.Orientation = objectsDto.Orientation;
                     meetObj.MeetId = meet.Id;
                     meetObj.ZIndex = objectsDto.ZIndex;
+                    meetObj.Walkable = objectsDto.Walkable == null ? true : false ;
                     meetObjects.Add(meetObj);
                 }
                 _meetObjectRepository.CreateObjectsMeet(meetObjects, meetId);
@@ -122,11 +156,12 @@ namespace Devameet_CSharp.Controllers
         }
 
         [HttpDelete]
-        public IActionResult DeleteMeet(int meetId)
+        
+        public IActionResult DeleteMeet(int meetid)
         {
             try
             {
-                _meetRepository.DeleteMeet(meetId);
+                _meetRepository.DeleteMeet(meetid);
                 return Ok("Sala de reunião excluída com sucesso");
 
             }

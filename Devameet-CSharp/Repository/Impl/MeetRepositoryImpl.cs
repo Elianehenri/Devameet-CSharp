@@ -18,10 +18,10 @@ namespace Devameet_CSharp.Repository.Impl
 
         }
 
-        public void DeleteMeet(int meetId)
+        public void DeleteMeet(int meetid)
         {
             //deleta os objetos da sala de reuniao
-            List<MeetObjects> meetObjectsExist = _context.MeetObjects.Where(o => o.MeetId == meetId).ToList();
+            List<MeetObjects> meetObjectsExist = _context.MeetObjects.Where(o => o.MeetId == meetid).ToList();
             //percorrer a lista de objetos da sala de reuniao
             foreach (MeetObjects meetObj in meetObjectsExist)
             {
@@ -29,8 +29,8 @@ namespace Devameet_CSharp.Repository.Impl
                 _context.MeetObjects.Remove(meetObj);
                 _context.SaveChanges();
             }
-            Meet meet = _context.Meets.First(m => m.Id == meetId);
-            _context.Remove(meet);
+            Meet meet = _context.Meets.FirstOrDefault(m => m.Id == meetid);
+            _context.Meets.Remove(meet);
             _context.SaveChanges();
         }
 
@@ -43,7 +43,13 @@ namespace Devameet_CSharp.Repository.Impl
         // lista da sala de reunioes do user
         public List<Meet> GetMeetByUser(int iduser)
         {
-            return _context.Meets.Where(m => m.UserId == iduser).ToList();
+            List<Meet> meets = _context.Meets.Where(m => m.UserId == iduser).ToList();
+            foreach (Meet meet in meets)
+            {
+                meet.MeetObjects = _context.MeetObjects.Where(m => m.MeetId == meet.Id).ToList();
+            }
+            return meets;
+
         }
         //atualizar o meet no banco
         public void UpdateMeet(Meet meet)

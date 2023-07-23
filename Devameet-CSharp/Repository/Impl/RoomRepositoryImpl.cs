@@ -19,9 +19,12 @@ namespace Devameet_CSharp.Repository.Impl
             return await _context.Meets.Where(m => m.Link == link).FirstAsync();
         }
 
+        //listar todos os usuarios na sala de video chamada
         public async Task<ICollection<PositionDto>> ListUsersPosition(string link)
         {
-            var meet = await _context.Meets.Where(m => m.Link == link).FirstAsync();
+            //buscar o id da meet
+            var meet = await _context.Meets.Where(m => m.Link == link).FirstOrDefaultAsync();
+            //buscar todos os usuarios na sala de video chamada
             var rooms = await _context.Rooms.Where(r => r.MeetId == meet.Id).ToListAsync();
             return rooms.Select(r => new PositionDto
             {
@@ -47,30 +50,36 @@ namespace Devameet_CSharp.Repository.Impl
 
         public async Task DeleteUserPosition(string clientId)
         {
+            //encontrar usuario na sala de video chamada
             var room = await _context.Rooms.Where(r => r.ClientId == clientId).ToListAsync();
+            //deletar usuario da sala de video chamada
             _context.Rooms.RemoveRange(room);
             await _context.SaveChangesAsync();
         }
 
         public async Task UpdateUserPosition(int userId, string link, string clientId, UpdatePositionDto dto)
         {
-            var meet = await _context.Meets.Where(m => m.Link == link).FirstAsync();
-            var user = await _context.Users.Where(u => u.Id == userId).FirstAsync();
+            //recuperar o id da meet
+            var meet = await _context.Meets.Where(m => m.Link == link).FirstOrDefaultAsync();
+            //buscar os dados do user
+            var user = await _context.Users.Where(u => u.Id == userId).FirstOrDefaultAsync();
 
+            //verificar quantas pessaos estao na sala
             var usersInRoom = await _context.Rooms.Where(r => r.MeetId == meet.Id).ToListAsync();
-
+           //colocar limtaçao de pessoas na sala
             if (usersInRoom.Count > 20)
-                throw new Exception("Meet is full");
-
+                throw new Exception("A sala está cheia");
+            //verificar se a pessoa ja esta na sala
             if (usersInRoom.Any(r => r.ClientId == clientId || r.UserId == userId))
             {
-                var position = await _context.Rooms.Where(r => r.ClientId == clientId || r.UserId == userId).FirstAsync();
+                var position = await _context.Rooms.Where(r => r.ClientId == clientId || r.UserId == userId).FirstOrDefaultAsync();
                 position.X = dto.X;
                 position.Y = dto.Y;
                 position.Orientation = dto.Orientation;
             }
             else
             {
+                //se ele na existir na sala, criar um novo
                 var room = new Room();
                 room.X = dto.X;
                 room.Y = dto.Y;
@@ -81,20 +90,37 @@ namespace Devameet_CSharp.Repository.Impl
                 room.UserName = user.Name;
                 room.Avatar = user.Avatar;
 
-                //await _context.Rooms.AddAsync(room);
+                await _context.Rooms.AddAsync(room);
             }
 
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateUserMute(ToggleMuteDto dto)
+        //mutar e desmutar
+        public async Task UpdateUserMute(MuteDto mutedto)
         {
-
-            var meet = await _context.Meets.Where(m => m.Link == dto.Link).FirstAsync();
-            var user = await _context.Users.Where(u => u.Id == Int32.Parse(dto.UserId)).FirstAsync();
+            //pegar o id da meet
+            var meet = await _context.Meets.Where(m => m.Link == mutedto.Link).FirstAsync();
+            //pegar o id do user
+            var user = await _context.Users.Where(u => u.Id == Int32.Parse(mutedto.UserId)).FirstAsync();
+            //pegar o registro do usuario na sala
             var room = await _context.Rooms.Where(r => r.MeetId == meet.Id && r.UserId == user.Id).FirstAsync();
-            room.Muted = dto.Muted;
+            //mudar o status do mute
+            room.Muted = mutedto.Muted;
             await _context.SaveChangesAsync();
+
+
+        }
+
+        public Meet GetRoomById(int meetid)
+        {
+            //pegar primeiro o meetid da sala de reunião
+                      
+            Meet meet = _context.Meets.Where(m => m.Id == meetid).FirstOrDefault();
+            //depois coloca todos os objetos do meet
+            meet.MeetObjects = _context.MeetObjects.Where(o => o.MeetId == meetid).ToList();
+
+            return meet;
         }
     }
 }

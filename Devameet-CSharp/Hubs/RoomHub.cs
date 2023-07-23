@@ -8,6 +8,7 @@ namespace Devameet_CSharp.Hubs
     {
         private readonly IRoomRepository _roomRepository;
         //toda vez que um cliente se conecta, ele recebe um id
+        //Criaçao do ClientId do socket (identificaçao unica dentro so SignalR)
         private string ClientId => Context.ConnectionId;
 
         public RoomHub(IRoomRepository roomRepository)
@@ -24,47 +25,55 @@ namespace Devameet_CSharp.Hubs
         public override async Task OnDisconnectedAsync(Exception exception)
         {
             Console.WriteLine("Disconnecting client...");
+            //buscar o usuario na sala de video chamada
             var userSocket = await _roomRepository.GetUserPosition(ClientId);
-
+            
             if (userSocket == null)
                 return;
-
+            
             var link = userSocket.Meet.Link;
+            //deletar posiçao do user no banco de dados
             await _roomRepository.DeleteUserPosition(ClientId);
-
+            //deletar usuario da sala de video chamada
             await Clients.Others.SendAsync($"remove-user", new { SocketId = ClientId });
 
             await base.OnDisconnectedAsync(exception);
         }
         //entrar na sala de video chamada e atualizar a lista de usuarios na sala de video chamada
         //e enviar para os outros usuarios da sala de video chamada que um novo usuario entrou na sala
-        public async Task Join(JoinDto dto)
+        public async Task Join(JoinDto joindto)
         {
-            var link = dto.Link;
-            var userId = Int32.Parse(dto.UserId);
+            var link = joindto.Link;
+            var userid = Int32.Parse(joindto.UserId);
 
 
             Console.WriteLine("Joining room...");
             var userSocket = await _roomRepository.GetUserPosition(ClientId);
             if (userSocket != null)
             {
-                Console.WriteLine("User already in room");
+                Console.WriteLine("Usuário já está na sala");
             }
             else
             {
-                Console.WriteLine("User ID: " + userId + "ClientId: " + ClientId + " Link: " + link);
+                Console.WriteLine("O Usuario: " + userid.ToString() + " entrou na sala com o ClientId: " + ClientId + " Link: " + link);
+                //adicionando um usuaro novo que chegou na sala de video chamada
                 await Groups.AddToGroupAsync(ClientId, link);
-
+                //entrada do usuario na posiçao inicial da sala de video chamada
+                //o usuario entrou na posiçao inicial 2,2 e olhando para baixo
                 var updatePositionDto = new UpdatePositionDto();
                 updatePositionDto.X = 2;
                 updatePositionDto.Y = 2;
                 updatePositionDto.Orientation = "down";
-
-                await _roomRepository.UpdateUserPosition(userId, link, ClientId, updatePositionDto);
+                //atualizar no banco de dados a posiçao do usuario na sala de video chamada
+                await _roomRepository.UpdateUserPosition(userid, link, ClientId, updatePositionDto);
+                //lista de usuarios na sala de video chamada
                 var users = await _roomRepository.ListUsersPosition(link);
 
-                Console.WriteLine("Sending to client.... Users: " + users.Count + "");
+                //devolver a lista de usuarios na sala de video chamada para o usuario que entrou na sala de video chamada
+                Console.WriteLine("Enviando para o cliente.... Usuários: " + users.Count + "");
+                //atualizar lista de usuarios na sala de video chamada para os outros usuarios da sala de video chamada
                 await Clients.Group(link).SendAsync($"update-user-list", new { Users = users });
+                //enviar para os outros usuarios da sala de video chamada que um novo usuario entrou na sala de video chamada
                 await Clients.OthersInGroup(link).SendAsync($"add-user", new { User = ClientId });
                 Console.WriteLine("Sent to client!");
             }
@@ -81,28 +90,32 @@ namespace Devameet_CSharp.Hubs
             updatePositionDto.Y = movedto.Y;
             updatePositionDto.Orientation = movedto.Orientation;
 
+            //atualizar no banco de dados a posiçao do usuario na sala de video chamada
             await _roomRepository.UpdateUserPosition(userId, link, ClientId, updatePositionDto);
             var users = await _roomRepository.ListUsersPosition(link);
             Console.WriteLine("Enviando a nova posiçao para os outros usuarios da sala de video chamada...");
             await Clients.Group(link).SendAsync($"update-user-list", new { Users = users });
         }
-
-        public async Task TogglMuteUser(ToggleMuteDto dto)
+        //deixa mute o usuario na sala de video chamada
+        public async Task UpdadeMuteUser(MuteDto mutedto)
         {
-            var link = dto.Link;
-            await _roomRepository.UpdateUserMute(dto);
+            var link = mutedto.Link;
+            //atualizar no banco de dados o mute do usuario na sala de video chamada
+            await _roomRepository.UpdateUserMute(mutedto);
             var users = await _roomRepository.ListUsersPosition(link);
+            //avisar para os outros usuarios da sala de video chamada que o usuario foi mutado
             await Clients.Group(link).SendAsync($"update-user-list", new { Users = users });
         }
 
-        public async Task CallUser(CallUserDto dto)
+        //conectar com o outro usuario da sala de video chamada
+        public async Task CallUser(CallUserDto callUserdto)
         {
-            await Clients.Client(dto.To).SendAsync("call-made", new { Offer = dto.Offer, Socket = ClientId });
+            await Clients.Client(callUserdto.To).SendAsync("call-made", new { Offer = callUserdto.Offer, Socket = ClientId });
         }
-
-        public async Task MakeAnswer(MakeAnswerDto dto)
+        //resposta do outro usuario da sala de video chamada
+        public async Task MakeAnswer(MakeAnswerDto makeAnswerdto)
         {
-            await Clients.Client(dto.To).SendAsync("answer-made", new { Answer = dto.Answer, Socket = ClientId });
+            await Clients.Client(makeAnswerdto.To).SendAsync("answer-made", new { Answer = makeAnswerdto.Answer, Socket = ClientId });
         }
     }
 }

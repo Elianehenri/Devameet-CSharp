@@ -3,6 +3,7 @@ using Devameet_CSharp.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Devameet_CSharp.Migrations
 {
     [DbContext(typeof(DevameetContext))]
-    partial class DevameetContextModelSnapshot : ModelSnapshot
+    [Migration("20230721175529_MeetObjectWalk")]
+    partial class MeetObjectWalk
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -76,9 +79,6 @@ namespace Devameet_CSharp.Migrations
 
                     b.Property<int>("ZIndex")
                         .HasColumnType("int");
-
-                    b.Property<bool>("walkable")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 

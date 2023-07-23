@@ -11,6 +11,7 @@ namespace Devameet_CSharp.Repository
 
         Task DeleteUserPosition(string clientId);
         Task UpdateUserPosition(int userId, string link, string clientId, UpdatePositionDto dto);
-        Task UpdateUserMute(ToggleMuteDto dto);
+        Task UpdateUserMute(MuteDto dto);
+        Meet GetRoomById(int meetid);
     }
 }
