@@ -1,4 +1,4 @@
-# Devameet-CSharp# Devameet C#
+# Devameet C#
 
 ## Description
 Este projeto foi desenvolvido em C#, baseado numa fusão do Meet da Google com o Gather, o Devameet.
