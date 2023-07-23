@@ -26,7 +26,7 @@ https://www.figma.com/file/mIXcu8SJWqi0ylVHtZn89a/Devameet-(Projeto-2023)
 - Criação, edição e exclusão de salas de reunião
   
 ## Instalation
-1. Clone o repositório: `git clone <git@github.com:Elianehenri/Devameet-CSharp.git>´
+1. Clone o repositório: `git clone git@github.com:Elianehenri/Devameet-CSharp.git`
 1. Entre na pasta do projeto: `cd Devameet-CSharp`
 1. Instale as dependências: `dotnet restore`
 1. Execute o projeto: `dotnet run`
